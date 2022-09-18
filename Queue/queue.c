@@ -2,18 +2,26 @@
 #include <string.h>
 #include "queue.h"
 
-void internal_initialize_queue(queue_t * const ptr, size_t size_given)
+bool initialize_bysize_queue(queue_t * const ptr, size_t size_given)
 {
+  if (ptr == NULL)
+    return false;
+
   ptr->head = NULL;
   ptr->tail = NULL;
   ptr->memsize = size_given;
   ptr->size = 0;
+
+  return true;
 }
 
-bool enqueue(queue_t * const ptr, void * data_given)
+bool push_queue(queue_t * const ptr, void * data_given)
 {
   qnode_t * current;
   void * dataptr;
+
+  if (ptr == NULL)
+    return false;
 
   current = (qnode_t *) malloc((ptr->memsize) + sizeof(qnode_t));
   if (current == NULL)
@@ -43,9 +51,12 @@ bool enqueue(queue_t * const ptr, void * data_given)
   }
 }
 
-bool dequeue(queue_t * const ptr)
+bool pop_queue(queue_t * const ptr)
 {
   qnode_t * temp;
+
+  if (ptr == NULL)
+    return false;
 
   temp = ptr->head;
 
@@ -65,9 +76,9 @@ bool dequeue(queue_t * const ptr)
     return false;
 }
 
-void * queue_peek(queue_t * const ptr)
+void * peek_queue(queue_t * const ptr)
 {
-  if (ptr->head != NULL)
+  if ((ptr != NULL) && (ptr->head != NULL))
     return ptr->head->data;
   else
     return NULL;
@@ -77,6 +88,9 @@ size_t delete_queue(queue_t * const ptr)
 {
   qnode_t * temp;
   size_t count;
+
+  if (ptr == NULL)
+    return 0;
 
   count = 0;
 

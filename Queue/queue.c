@@ -2,7 +2,7 @@
 #include <string.h>
 #include "queue.h"
 
-bool initialize_bysize_queue(queue_t * const ptr, size_t size_given)
+bool initialize_bysize_queue(queue_t * const restrict ptr, size_t size_given)
 {
   if (ptr == NULL)
     return false;
@@ -15,7 +15,7 @@ bool initialize_bysize_queue(queue_t * const ptr, size_t size_given)
   return true;
 }
 
-bool push_queue(queue_t * const ptr, void * data_given)
+bool push_queue(queue_t * const restrict ptr, void * data_given)
 {
   qnode_t * current;
   void * dataptr;
@@ -51,7 +51,7 @@ bool push_queue(queue_t * const ptr, void * data_given)
   }
 }
 
-bool pop_queue(queue_t * const ptr)
+bool pop_queue(queue_t * const restrict ptr)
 {
   qnode_t * temp;
 
@@ -76,7 +76,7 @@ bool pop_queue(queue_t * const ptr)
     return false;
 }
 
-void * peek_queue(queue_t * const ptr)
+void * peek_queue(queue_t * const restrict ptr)
 {
   if ((ptr != NULL) && (ptr->head != NULL))
     return ptr->head->data;
@@ -84,7 +84,7 @@ void * peek_queue(queue_t * const ptr)
     return NULL;
 }
 
-size_t delete_queue(queue_t * const ptr)
+size_t clear_queue(queue_t * const restrict ptr)
 {
   qnode_t * temp;
   size_t count;
@@ -103,8 +103,20 @@ size_t delete_queue(queue_t * const ptr)
   }
 
   ptr->tail = NULL;
-  ptr->memsize = 0;
   ptr->size = 0;
+
+  return count;
+}
+
+size_t delete_queue(queue_t * const restrict ptr)
+{
+  size_t count;
+
+  if (ptr == NULL)
+    return 0;
+
+  count = clear_queue(ptr);
+  ptr->memsize = 0;
 
   return count;
 }

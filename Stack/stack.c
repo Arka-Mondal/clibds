@@ -2,17 +2,25 @@
 #include <string.h>
 #include "stack.h"
 
-void internal_initialize_stack(stack_t * const ptr, size_t size_given)
+bool initialize_bysize_stack(stack_t * const ptr, size_t size_given)
 {
+  if (ptr == NULL)
+    return false;
+
   ptr->head = NULL;
   ptr->memsize = size_given;
   ptr->size = 0;
+
+  return true;
 }
 
-bool stack_push(stack_t * const ptr, void * data_given)
+bool push_stack(stack_t * const ptr, void * data_given)
 {
   void * dataptr;
   snode_t * current, * temp;
+
+  if (ptr == NULL)
+    return false;
 
   current = (snode_t *) malloc((ptr->memsize) + sizeof(snode_t));
   if (current == NULL)
@@ -33,9 +41,12 @@ bool stack_push(stack_t * const ptr, void * data_given)
   }
 }
 
-bool stack_pop(stack_t * const ptr)
+bool pop_stack(stack_t * const ptr)
 {
   snode_t * temp;
+
+  if (ptr == NULL)
+    return false;
 
   temp = ptr->head;
 
@@ -52,9 +63,9 @@ bool stack_pop(stack_t * const ptr)
     return false;
 }
 
-void * stack_peek(stack_t * const ptr)
+void * peek_stack(stack_t * const ptr)
 {
-  if (ptr->head != NULL)
+  if ((ptr != NULL) && (ptr->head != NULL))
     return ptr->head->data;
   else
     return NULL;
@@ -64,6 +75,9 @@ size_t delete_stack(stack_t * ptr)
 {
   snode_t * temp;
   size_t count;
+
+  if (ptr == NULL)
+    return 0;
 
   count = 0;
 

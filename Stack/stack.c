@@ -1,8 +1,14 @@
+/*
+  Copyright (c) 2022, Arka Mondal. All rights reserved.
+  Use of this source code is governed by a BSD-style license that
+  can be found in the LICENSE file.
+*/
+
 #include <stdlib.h>
 #include <string.h>
 #include "stack.h"
 
-bool initialize_bysize_stack(stack_t * const ptr, size_t size_given)
+bool initialize_bysize_stack(stack_t * const restrict ptr, size_t size_given)
 {
   if (ptr == NULL)
     return false;
@@ -14,7 +20,7 @@ bool initialize_bysize_stack(stack_t * const ptr, size_t size_given)
   return true;
 }
 
-bool push_stack(stack_t * const ptr, void * data_given)
+bool push_stack(stack_t * const restrict ptr, void * data_given)
 {
   void * dataptr;
   snode_t * current, * temp;
@@ -41,7 +47,7 @@ bool push_stack(stack_t * const ptr, void * data_given)
   }
 }
 
-bool pop_stack(stack_t * const ptr)
+bool pop_stack(stack_t * const restrict ptr)
 {
   snode_t * temp;
 
@@ -63,7 +69,7 @@ bool pop_stack(stack_t * const ptr)
     return false;
 }
 
-void * peek_stack(stack_t * const ptr)
+void * peek_stack(stack_t * const restrict ptr)
 {
   if ((ptr != NULL) && (ptr->head != NULL))
     return ptr->head->data;
@@ -71,7 +77,7 @@ void * peek_stack(stack_t * const ptr)
     return NULL;
 }
 
-size_t delete_stack(stack_t * ptr)
+size_t clear_stack(stack_t * const restrict ptr)
 {
   snode_t * temp;
   size_t count;
@@ -89,8 +95,21 @@ size_t delete_stack(stack_t * ptr)
     count++;
   }
 
-  ptr->memsize = 0;
   ptr->size = 0;
+
+  return count;
+}
+
+size_t delete_stack(stack_t * const restrict ptr)
+{
+  size_t count;
+
+  if (ptr == NULL)
+    return 0;
+
+  count = clear_stack(ptr);
+
+  ptr->memsize = 0;
 
   return count;
 }

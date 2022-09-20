@@ -2,3 +2,5 @@
 */*.o
 */*.out
 */test*.c
+Linked_list/Linked_list_Doubly
+Linked_list/Linked_list_Singly

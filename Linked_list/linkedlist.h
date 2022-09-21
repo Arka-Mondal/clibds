@@ -15,7 +15,7 @@
 
   #define initialize_listd(S, T) initialize_bysize_listd(S, sizeof(T))
   #define is_empty_listd(S) (((S) != NULL) ? (((S)->size == 0) ? true : false) : true)
-  #define for_each_in_listd(Q, I) for (node_d_t * I = ((Q) != NULL) ? (Q)->head : NULL; I != NULL; I = I->next)
+  #define for_each_in_listd(Q, I) for (dnode_t * I = ((Q) != NULL) ? (Q)->head : NULL; I != NULL; I = I->next)
 
   struct node {
     void * data;
@@ -64,7 +64,7 @@
   bool initialize_bysize_listd(listd_t * const restrict, size_t);
   bool pushback_listd(listd_t * const restrict, void *);
   bool pushfront_listd(listd_t * const restrict, void *);
-  bool pushatindex_listd(listd_t * const restrict, size_t ,void *);
+  bool pushatindex_listd(listd_t * const restrict, size_t, void *);
   bool popfront_listd(listd_t * const restrict);
   bool popback_listd(listd_t * const restrict);
   bool popatindex_listd(listd_t * const restrict, size_t);

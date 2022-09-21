@@ -17,6 +17,8 @@
   #define is_empty_listd(S) (((S) != NULL) ? (((S)->size == 0) ? true : false) : true)
   #define for_each_in_listd(Q, I) for (dnode_t * I = ((Q) != NULL) ? (Q)->head : NULL; I != NULL; I = I->next)
 
+  #define format_data(I, T) (*(T *) (I))
+
   struct node {
     void * data;
     struct node * next;

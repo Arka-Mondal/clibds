@@ -12,6 +12,8 @@
   #define initialize_stack(S, T) initialize_bysize_stack(S, sizeof(T))
   #define is_empty_stack(S) (((S) != NULL) ? (((S)->size == 0) ? true : false) : true)
   #define for_each_in_stack(Q, I) for (snode_t * I = ((Q) != NULL) ? (Q)->head : NULL; I != NULL; I = I->next)
+  
+  #define format_data(I, T) (*(T *) (I))
 
   struct stack_node {
     void * data;

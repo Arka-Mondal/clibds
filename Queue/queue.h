@@ -17,6 +17,8 @@
   #define is_empty_deque(S) (((S) != NULL) ? (((S)->size == 0) ? true : false) : true)
   #define for_each_in_deque(Q, I) for (qnode_t * I = ((Q) != NULL) ? (Q)->head : NULL; I != NULL; I = I->next)
 
+  #define format_data(I, T) (*(T *) (I))
+
   struct queue_node {
     void * data;
     struct queue_node * next;

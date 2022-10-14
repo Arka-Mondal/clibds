@@ -21,10 +21,8 @@ int main(void)
   for (i = 0; i < 6; i++)
     push_stack(&new_stack, arr + i);
 
-  // iterate over each element in the stack starting from the stack top
-  for_each_in_stack(&new_stack, it)
-    printf("%d ", format_data(it->data, int));
-  putchar('\n');
+  // stack peek
+  printf("stack top: %d\n", format_data(peek_stack(&new_stack), int));
 
   // pop an element from the stack
   pop_stack(&new_stack);

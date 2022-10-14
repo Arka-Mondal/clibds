@@ -11,22 +11,25 @@
   #include <stddef.h>
   #define initialize_stack(S, T) initialize_bysize_stack(S, sizeof(T))
   #define is_empty_stack(S) (((S) != NULL) ? (((S)->size == 0) ? true : false) : true)
-  #define for_each_in_stack(Q, I) for (snode_t * I = ((Q) != NULL) ? (Q)->head : NULL; I != NULL; I = I->next)
-  
+
   #define format_data(I, T) (*(T *) (I))
 
-  struct stack_node {
-    void * data;
-    struct stack_node * next;
-  };
-
   struct stack {
-    struct stack_node * head;
-    size_t memsize;
+    void ** buffer;
+
+    // The current number of the elements in the priority queue
     size_t size;
+
+    // The current capacity of the buffer
+    size_t capacity;
+
+    // The size of each element in the priority queue
+    size_t memsize;
+
+    // The expansion factor of the buffer
+    double exp_factor;
   };
 
-  typedef struct stack_node snode_t;
   typedef struct stack stack_t;
 
   bool initialize_bysize_stack(stack_t * const restrict, size_t);

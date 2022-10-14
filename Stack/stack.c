@@ -8,92 +8,119 @@
 #include <string.h>
 #include "stack.h"
 
-bool initialize_bysize_stack(stack_t * const restrict ptr, size_t size_given)
+#define DEFAULT_RESIZE_FACTOR 1.5
+#define DEFAULT_CAPACITY 16
+#define MAX_CAPACITY ((size_t) -2)
+
+static bool resize_buffer(stack_t * const restrict ptr)
 {
-  if (ptr == NULL)
+  size_t new_capacity, temp_capacity;
+  void ** new_buffer;
+
+  if (ptr->capacity == MAX_CAPACITY)
     return false;
 
-  ptr->head = NULL;
-  ptr->memsize = size_given;
-  ptr->size = 0;
+  new_capacity = ptr->capacity * ptr->exp_factor;
+
+  /*
+   * If the new_capacity is smaller or equal to the capacity
+   * then the overflow has ocurred. It check the validity of
+   * the new_capacity
+  */
+
+  if (new_capacity <= ptr->capacity)
+    temp_capacity = MAX_CAPACITY;
+  else
+    temp_capacity = new_capacity;
+
+  new_buffer = (void **) malloc(temp_capacity * sizeof(void *));
+  if (new_buffer == NULL)
+    return false;
+
+  memcpy(new_buffer, ptr->buffer, ptr->size * sizeof(void *));
+
+  free(ptr->buffer);
+
+  ptr->capacity = temp_capacity;
+  ptr->buffer = new_buffer;
 
   return true;
 }
 
-bool push_stack(stack_t * const restrict ptr, void * data_given)
+bool initialize_bysize_stack(stack_t * const restrict ptr, size_t size_given)
 {
-  void * dataptr;
-  snode_t * current, * temp;
-
-  if (ptr == NULL)
+  if ((ptr == NULL) || (size_given == 0))
     return false;
 
-  current = (snode_t *) malloc((ptr->memsize) + sizeof(snode_t));
-  if (current == NULL)
+  ptr->buffer = (void **) malloc(DEFAULT_CAPACITY * sizeof(void *));
+  if (ptr->buffer == NULL)
     return false;
-  else
+
+  ptr->size = 0;
+  ptr->capacity = DEFAULT_CAPACITY;
+  ptr->memsize = size_given;
+  ptr->exp_factor = DEFAULT_RESIZE_FACTOR;
+
+  return true;
+}
+
+bool push_stack(stack_t * const restrict ptr, void * element)
+{
+  bool status;
+  void * temp;
+
+  if ((ptr == NULL) || (element == NULL))
+    return false;
+
+  if (ptr->capacity <= ptr->size)
   {
-    dataptr = (void *) (current + 1);
+    status = resize_buffer(ptr);
 
-    memcpy(dataptr, data_given, ptr->memsize);
-
-    current->data = dataptr;
-    temp = ptr->head;
-    ptr->head = current;
-    current->next = temp;
-    ptr->size += 1;
-
-    return true;
+    if (status == false)
+      return false;
   }
+
+  temp = (void *) malloc(ptr->memsize);
+  if (temp == NULL)
+    return false;
+
+  memcpy(temp, element, ptr->memsize);
+  ptr->buffer[ptr->size] = temp;
+  ptr->size++;
+
+  return true;
 }
 
 bool pop_stack(stack_t * const restrict ptr)
 {
-  snode_t * temp;
-
-  if (ptr == NULL)
+  if ((ptr == NULL) || (ptr->buffer == NULL) || (ptr->size == 0))
     return false;
 
-  temp = ptr->head;
+  ptr->size--;
+  free(ptr->buffer[ptr->size]);
 
-  if (temp != NULL)
-  {
-    ptr->head = ptr->head->next;
-
-    free(temp);
-    ptr->size -= 1;
-
-    return true;
-  }
-  else
-    return false;
+  return true;
 }
 
 void * peek_stack(stack_t * const restrict ptr)
 {
-  if ((ptr != NULL) && (ptr->head != NULL))
-    return ptr->head->data;
+  if ((ptr != NULL) && (ptr->buffer != NULL) && (ptr->size > 0))
+    return ptr->buffer[ptr->size - 1];
   else
     return NULL;
 }
 
 size_t clear_stack(stack_t * const restrict ptr)
 {
-  snode_t * temp;
-  size_t count;
+  size_t count, i;
 
-  if (ptr == NULL)
+  if ((ptr == NULL) || (ptr->buffer == NULL))
     return 0;
 
-  count = 0;
+  count = ptr->size;
 
-  while (ptr->head != NULL)
-  {
-    temp = ptr->head;
-    ptr->head = ptr->head->next;
-    free(temp);
-    count++;
-  }
+  for (i = 0; i < count; i++)
+    free(ptr->buffer[i]);
 
   ptr->size = 0;
 
@@ -104,12 +131,17 @@ size_t delete_stack(stack_t * const restrict ptr)
 {
   size_t count;
 
-  if (ptr == NULL)
+  if ((ptr == NULL) || (ptr->buffer == NULL))
     return 0;
 
   count = clear_stack(ptr);
 
+  free(ptr->buffer);
+
+  ptr->buffer = NULL;
+  ptr->capacity = 0;
   ptr->memsize = 0;
+  ptr->exp_factor = 0.0;
 
   return count;
 }

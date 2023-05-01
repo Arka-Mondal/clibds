@@ -48,7 +48,7 @@ static void clibds_bst_reverseorder(void * arr, size_t datasize, void * temp,
   }
 }
 
-static size_t clibds_bst_preorder(binaryst_t * const ptr, void * arr)
+static size_t clibds_bst_preorder(bstree_t * const ptr, void * arr)
 {
   bstnode_t * current, * pred;
   size_t count, datasize;
@@ -96,7 +96,7 @@ static size_t clibds_bst_preorder(binaryst_t * const ptr, void * arr)
   return count;
 }
 
-static size_t clibds_bst_inorder(binaryst_t * const ptr, void * arr)
+static size_t clibds_bst_inorder(bstree_t * const ptr, void * arr)
 {
   bstnode_t * current, * pred;
   size_t count, datasize;
@@ -144,7 +144,7 @@ static size_t clibds_bst_inorder(binaryst_t * const ptr, void * arr)
   return count;
 }
 
-static size_t clibds_bst_postorder(binaryst_t * const ptr, void * arr)
+static size_t clibds_bst_postorder(bstree_t * const ptr, void * arr)
 {
   void * temp_var;
   bstnode_t * temp, * current, * pred;
@@ -206,7 +206,7 @@ static size_t clibds_bst_postorder(binaryst_t * const ptr, void * arr)
   return count;
 }
 
-bool clibds_bst_initialize_bysize(binaryst_t * const ptr, size_t size_given,
+bool clibds_bst_initialize_bysize(bstree_t * const ptr, size_t size_given,
                     int (* comparator_given)(void *, void *))
 {
   if ((ptr == NULL) || (size_given == 0) || (comparator_given == NULL))
@@ -220,7 +220,7 @@ bool clibds_bst_initialize_bysize(binaryst_t * const ptr, size_t size_given,
   return true;
 }
 
-bool clibds_bst_insert(binaryst_t * const ptr, void * data_given)
+bool clibds_bst_insert(bstree_t * const ptr, void * data_given)
 {
   void * dataptr;
   bstnode_t * current, * temp, * parent_node;
@@ -270,7 +270,7 @@ bool clibds_bst_insert(binaryst_t * const ptr, void * data_given)
   return true;
 }
 
-bool clibds_bst_viewdata(binaryst_t * ptr, void (* print_data)(void *), int select)
+bool clibds_bst_viewdata(bstree_t * ptr, void (* print_data)(void *), int select)
 {
   if (print_data == NULL)
     return false;
@@ -287,7 +287,7 @@ bool clibds_bst_viewdata(binaryst_t * ptr, void (* print_data)(void *), int sele
   return true;
 }
 
-size_t clibds_bst_getdata(binaryst_t * ptr, void * arr, int select)
+size_t clibds_bst_getdata(bstree_t * ptr, void * arr, int select)
 {
   size_t count;
 
@@ -306,7 +306,7 @@ size_t clibds_bst_getdata(binaryst_t * ptr, void * arr, int select)
   return count;
 }
 
-bool clibds_bst_remove(binaryst_t * const ptr, void * dataptr)
+bool clibds_bst_remove(bstree_t * const ptr, void * dataptr)
 {
   bstnode_t * current, * temp, * child_node;
 
@@ -386,7 +386,7 @@ bool clibds_bst_remove(binaryst_t * const ptr, void * dataptr)
 }
 
 
-size_t clibds_bst_delete(binaryst_t * const ptr)
+size_t clibds_bst_delete(bstree_t * const ptr)
 {
   bstnode_t * current, * pred;
   size_t count;
@@ -426,7 +426,28 @@ size_t clibds_bst_delete(binaryst_t * const ptr)
   return count;
 }
 
-void * clibds_bst_minimum(binaryst_t * const ptr)
+void * clibds_bst_search(bstree_t * const ptr, void * dataptr)
+{
+  bstnode_t * current;
+
+  if ((ptr == NULL) || (dataptr == NULL))
+    return NULL;
+
+  current = ptr->root;
+
+  while (current != NULL)
+  {
+    if (ptr->comparator(dataptr, current->data) == -1)
+      current = current->left;
+    else if (ptr->comparator(dataptr, current->data) == 1)
+      current = current->right;
+    else
+      return current->data;
+  }
+  return NULL;
+}
+
+void * clibds_bst_minimum(bstree_t * const ptr)
 {
   bstnode_t * current;
 
@@ -441,7 +462,7 @@ void * clibds_bst_minimum(binaryst_t * const ptr)
   return current->data;
 }
 
-void * clibds_bst_maximum(binaryst_t * const ptr)
+void * clibds_bst_maximum(bstree_t * const ptr)
 {
   bstnode_t * current;
 

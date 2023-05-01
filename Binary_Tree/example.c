@@ -13,7 +13,7 @@ int comp_data(void *, void *);
 int main(void)
 {
   int data_arr[9] = {8, 3, 10, 1, 6, 14, 4, 7, 13}, order[9];
-  binaryst_t new_tree;
+  bstree_t new_tree;
   size_t count, i;
 
   clibds_bst_initialize(&new_tree, int, comp_data);

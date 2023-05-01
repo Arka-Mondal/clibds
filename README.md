@@ -11,7 +11,7 @@
 - [ ] Hash Table
 - [ ] Hash Map
 - [x] Binary Search Tree
-- [ ] AVL Tree
+- [x] AVL Tree
 - [ ] Red Black Tree
 - [ ] Graph
 - [ ] Fenwick Tree

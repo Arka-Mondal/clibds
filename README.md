@@ -12,7 +12,7 @@
 - [ ] Hash Map
 - [x] Binary Search Tree
 - [x] AVL Tree
-- [ ] Red Black Tree
+- [x] Red Black Tree
 - [ ] Graph
 - [ ] Fenwick Tree
 

@@ -6,7 +6,7 @@
 - [x] Queue
 - [x] Priority Queue
 - [ ] Indexed Priority Queue
-- [ ] Vector (A contiguous growable array)
+- [x] Vector (A contiguous growable array)
 - [ ] Union Find
 - [ ] Hash Table
 - [ ] Hash Map

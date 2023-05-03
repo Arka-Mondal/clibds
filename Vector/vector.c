@@ -117,13 +117,13 @@ bool clibds_vec_init_bysize(vector_t * const vec_ptr, size_t size_given,
 }
 
 /*
- * Inserts a new element to the the vector.
+ * Inserts a new element to the end the vector.
  *
  * It returns false if resizing of the buffer or the
  * allocation of spcae for the new element failed.
 */
 
-bool clibds_vec_pushback(vector_t * const vec_ptr, void * const data_given)
+bool clibds_vec_push(vector_t * const vec_ptr, void * const data_given)
 {
   bool status;
   void * temp_data;
@@ -152,22 +152,161 @@ bool clibds_vec_pushback(vector_t * const vec_ptr, void * const data_given)
 }
 
 /*
+ * Inserts a new element to the end of the vector assuming
+ * sufficient capacity of the buffer.
+ *
+ * It returns false if there is not enough capacity of
+ * the buffer or the allocation of spcae for the new element failed.
+*/
+
+bool clibds_vec_push_assumecapacity(vector_t * const vec_ptr, void * const data_given)
+{
+  void * temp_data;
+
+  if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL))
+    return false;
+
+  if (vec_ptr->size >= vec_ptr->capacity)
+    return false;
+
+  temp_data = (void *) vec_ptr->mem_alloc(vec_ptr->memsize);
+  if (temp_data == NULL)
+    return false;
+
+  memcpy(temp_data, data_given, vec_ptr->memsize);
+  vec_ptr->buffer[vec_ptr->size] = temp_data;
+  vec_ptr->size++;
+
+  return true;
+}
+
+/*
+ * Inserts a new element to an index the vector.
+ *
+ * It returns false if resizing of the buffer or the
+ * allocation of spcae for the new element failed.
+*/
+
+bool clibds_vec_insert(vector_t * const vec_ptr, size_t index,
+                       void * const data_given)
+{
+  bool status;
+  size_t i;
+  void * temp_data;
+
+  if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL)
+      || (index > vec_ptr->size))
+    return false;
+
+  if (index == vec_ptr->size)
+    return clibds_vec_push(vec_ptr, data_given);
+
+  if (vec_ptr->size >= vec_ptr->capacity)
+  {
+    // resize the buffer
+
+    status = clibds_vec_resizebuffer(vec_ptr);
+    if (!status)
+      return false;
+  }
+
+  temp_data = (void *) vec_ptr->mem_alloc(vec_ptr->memsize);
+  if (temp_data == NULL)
+    return false;
+
+  memcpy(temp_data, data_given, vec_ptr->memsize);
+
+  // shifts the elemets [index...size) to the higher index
+  for (i = vec_ptr->size; i > index; i--)
+    vec_ptr->buffer[i] = vec_ptr->buffer[i - 1];
+
+  vec_ptr->buffer[index] = temp_data;
+  vec_ptr->size++;
+
+  return true;
+}
+
+/*
+ * Inserts a new element to an index of the vector assuming
+ * sufficient capacity of the buffer.
+ *
+ * It returns false if there is not enough capacity of
+ * the buffer or the allocation of spcae for the new element failed.
+*/
+
+bool clibds_vec_insert_assumecapacity(vector_t * const vec_ptr,
+                                      size_t index, void * const data_given)
+{
+  size_t i;
+  void * temp_data;
+
+  if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL)
+      || (index > vec_ptr->size))
+    return false;
+
+  if (index == vec_ptr->size)
+    return clibds_vec_push_assumecapacity(vec_ptr, data_given);
+
+  if (vec_ptr->size >= vec_ptr->capacity)
+    return false;
+
+  temp_data = (void *) vec_ptr->mem_alloc(vec_ptr->memsize);
+  if (temp_data == NULL)
+    return false;
+
+  memcpy(temp_data, data_given, vec_ptr->memsize);
+
+  // shifts the elemets [index...size) to the higher index
+  for (i = vec_ptr->size; i > index; i--)
+    vec_ptr->buffer[i] = vec_ptr->buffer[i - 1];
+
+  vec_ptr->buffer[index] = temp_data;
+  vec_ptr->size++;
+
+  return true;
+}
+
+/*
  * Removes an element from the back of the vector
  *
  * It returns false if the buffer is NULL or the vec_ptr is NULL
  * otherwise true.
 */
 
-bool clibds_vec_popback(vector_t * const vec_ptr)
+bool clibds_vec_pop(vector_t * const vec_ptr)
 {
-  void * temp;
-
   if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL))
     return false;
 
-  temp = vec_ptr->buffer[vec_ptr->size - 1];
+  vec_ptr->size--;
 
-  vec_ptr->mem_free(temp);
+  vec_ptr->mem_free(vec_ptr->buffer[vec_ptr->size]);
+
+  return true;
+}
+
+/*
+ * Removes an element from an index of the vector
+ *
+ * It returns false if the buffer is NULL or the vec_ptr is NULL
+ * or the index is out of bound otherwise true.
+*/
+
+bool clibds_vec_remove(vector_t * const vec_ptr, size_t index)
+{
+  size_t i;
+
+  if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL)
+      || (index >= vec_ptr->size))
+    return false;
+
+  if (index == vec_ptr->size - 1)
+    return clibds_vec_pop(vec_ptr);
+
+  vec_ptr->mem_free(vec_ptr->buffer[index]);
+
+  for (i = index; i < vec_ptr->size - 1; i++)
+    vec_ptr->buffer[i] = vec_ptr->buffer[i + 1];
 
   vec_ptr->size--;
 

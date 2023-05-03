@@ -15,12 +15,29 @@ int main(void)
   clibds_vec_init(&new_vec, int, NULL);
 
   for (int i = 0; i < 6; i++)
-    clibds_vec_pushback(&new_vec, arr + i);
+    clibds_vec_push(&new_vec, arr + i);
 
   clibds_vec_foreach(&new_vec, it)
   {
-    printf("%d\n", *(int *) *it);
+    printf("%d ", *(int *) *it);
   }
+  putchar('\n');
+
+  clibds_vec_insert(&new_vec, 0, &(int){5});
+
+  clibds_vec_foreach(&new_vec, it)
+  {
+    printf("%d ", *(int *) *it);
+  }
+  putchar('\n');
+
+  printf("%s\n", (clibds_vec_remove(&new_vec, 2)) ? "true" : "false");
+
+  clibds_vec_foreach(&new_vec, it)
+  {
+    printf("%d ", *(int *) *it);
+  }
+  putchar('\n');
 
   clibds_vec_delete(&new_vec);
 

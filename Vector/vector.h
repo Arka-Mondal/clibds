@@ -49,8 +49,12 @@
   typedef struct clibds_vector vector_t;
 
   bool clibds_vec_init_bysize(vector_t * const, size_t, vector_conf_t * const);
-  bool clibds_vec_pushback(vector_t * const, void * const);
-  bool clibds_vec_popback(vector_t * const);
+  bool clibds_vec_push(vector_t * const, void * const);
+  bool clibds_vec_push_assumecapacity(vector_t * const, void * const);
+  bool clibds_vec_insert(vector_t * const, size_t, void * const);
+  bool clibds_vec_insert_assumecapacity(vector_t * const, size_t, void * const);
+  bool clibds_vec_pop(vector_t * const);
+  bool clibds_vec_remove(vector_t * const, size_t);
   size_t clibds_vec_clear(vector_t * const);
   size_t clibds_vec_delete(vector_t * const);
 

@@ -31,6 +31,8 @@ int main(void)
   }
   putchar('\n');
 
+  printf("Size: %zu\n", clibds_vec_size(&new_vec));
+
   printf("%s\n", (clibds_vec_remove(&new_vec, 2)) ? "true" : "false");
 
   clibds_vec_foreach(&new_vec, it)

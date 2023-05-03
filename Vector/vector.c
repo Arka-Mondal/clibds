@@ -128,7 +128,8 @@ bool clibds_vec_push(vector_t * const vec_ptr, void * const data_given)
   bool status;
   void * temp_data;
 
-  if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL))
+  if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL)
+      || (data_given == NULL))
     return false;
 
   if (vec_ptr->size >= vec_ptr->capacity)
@@ -163,7 +164,8 @@ bool clibds_vec_push_assumecapacity(vector_t * const vec_ptr, void * const data_
 {
   void * temp_data;
 
-  if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL))
+  if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL)
+      || (data_given == NULL))
     return false;
 
   if (vec_ptr->size >= vec_ptr->capacity)
@@ -195,7 +197,7 @@ bool clibds_vec_insert(vector_t * const vec_ptr, size_t index,
   void * temp_data;
 
   if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL)
-      || (index > vec_ptr->size))
+      || (data_given == NULL) || (index > vec_ptr->size))
     return false;
 
   if (index == vec_ptr->size)
@@ -241,7 +243,7 @@ bool clibds_vec_insert_assumecapacity(vector_t * const vec_ptr,
   void * temp_data;
 
   if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL)
-      || (index > vec_ptr->size))
+      || (data_given == NULL) || (index > vec_ptr->size))
     return false;
 
   if (index == vec_ptr->size)
@@ -275,7 +277,8 @@ bool clibds_vec_insert_assumecapacity(vector_t * const vec_ptr,
 
 bool clibds_vec_pop(vector_t * const vec_ptr)
 {
-  if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL))
+  if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL)
+      || (vec_ptr->size == 0))
     return false;
 
   vec_ptr->size--;
@@ -311,6 +314,38 @@ bool clibds_vec_remove(vector_t * const vec_ptr, size_t index)
   vec_ptr->size--;
 
   return true;
+}
+
+/*
+ * Returns the last element in the vector.
+ *
+ * Returns NULL if the vec_ptr is NULL or the buffer is NULL
+ * or the size of the vector is 0.
+*/
+
+void * clibds_vec_getlast(vector_t * const vec_ptr)
+{
+  if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL)
+      || (vec_ptr->size == 0))
+    return NULL;
+
+  return vec_ptr->buffer[vec_ptr->size - 1];
+}
+
+/*
+ * Returns the element at an index in the vector.
+ *
+ * Returns NULL if the vec_ptr is NULL or the buffer is NULL
+ * or the size of the vector is 0 or index out of bound.
+*/
+
+void * clibds_vec_getatindex(vector_t * const vec_ptr, size_t index)
+{
+  if ((vec_ptr == NULL) || (vec_ptr->buffer == NULL)
+      || (index >= vec_ptr->size))
+    return NULL;
+
+  return vec_ptr->buffer[index];
 }
 
 /*

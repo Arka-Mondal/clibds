@@ -1,42 +1,40 @@
 /*
-  Copyright (c) 2022, Arka Mondal. All rights reserved.
+  Copyright (c) 2023, Arka Mondal. All rights reserved.
   Use of this source code is governed by a BSD-style license that
   can be found in the LICENSE file.
 */
 
-#ifndef STACK_H
-  #define STACK_H
+#ifndef CLIBDS_STACK_H
+  #define CLIBDS_STACK_H
 
   #include <stdbool.h>
   #include <stddef.h>
-  #define initialize_stack(S, T) initialize_bysize_stack(S, sizeof(T))
-  #define is_empty_stack(S) (((S) != NULL) ? (((S)->size == 0) ? true : false) : true)
+  #include "vector.h"
+  #define clibds_stack_init(S, T, C) clibds_stack_init_bysize(S, sizeof(T), C)
+  #define clibds_stack_isempty(S) (((S) != NULL) ? (((S)->stack_vec.size == 0) ? true : false) : true)
+  #define clibds_stack_size(S) (((S) != NULL) ? ((S)->stack_vec.size) : 0)
+  #define clibds_stack_foreach(S, I) clibds_vec_foreach(&(S)->stack_vec, I)
 
   #define format_data(I, T) (*(T *) (I))
 
-  struct stack {
-    void ** buffer;
-
-    // The current number of the elements in the priority queue
-    size_t size;
-
-    // The current capacity of the buffer
-    size_t capacity;
-
-    // The size of each element in the priority queue
-    size_t memsize;
-
-    // The expansion factor of the buffer
-    double exp_factor;
+  struct clibds_stack_conf {
+    vector_conf_t conf_stack_vec;
   };
 
-  typedef struct stack stack_t;
+  struct clibds_stack {
+    vector_t stack_vec;
+  };
 
-  bool initialize_bysize_stack(stack_t * const restrict, size_t);
-  bool push_stack(stack_t * const restrict, void *);
-  bool pop_stack(stack_t * const restrict);
-  void * peek_stack(stack_t * const restrict);
-  size_t clear_stack(stack_t * const restrict);
-  size_t delete_stack(stack_t * const restrict);
+  typedef struct clibds_stack_conf stack_conf_t;
+  typedef struct clibds_stack stack_t;
+
+  bool clibds_stack_init_conf(stack_conf_t * const, size_t, size_t,
+                            void * (*)(size_t), void (*)(void *));
+  bool clibds_stack_init_bysize(stack_t * const, size_t, stack_conf_t * const);
+  bool clibds_stack_push(stack_t * const, void *);
+  bool clibds_stack_pop(stack_t * const);
+  void * clibds_stack_peek(stack_t * const);
+  size_t clibds_stack_clear(stack_t * const);
+  size_t clibds_stack_delete(stack_t * const);
 
 #endif

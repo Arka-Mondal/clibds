@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2022, Arka Mondal. All rights reserved.
+  Copyright (c) 2023, Arka Mondal. All rights reserved.
   Use of this source code is governed by a BSD-style license that
   can be found in the LICENSE file.
 */
@@ -15,26 +15,31 @@ int main(void)
   stack_t new_stack;
 
   // initialize the stack
-  initialize_stack(&new_stack, int);
+  clibds_stack_init(&new_stack, int, NULL);
 
   // push values into the stack
   for (i = 0; i < 6; i++)
-    push_stack(&new_stack, arr + i);
+    clibds_stack_push(&new_stack, arr + i);
 
-  // stack peek
-  printf("stack top: %d\n", format_data(peek_stack(&new_stack), int));
+  clibds_stack_foreach(&new_stack, it)
+  {
+    printf("%d ", *(int *) *it);
+  }
+  putchar('\n');
 
-  // pop an element from the stack
-  pop_stack(&new_stack);
+  printf("Stack size: %zu\n", clibds_stack_size(&new_stack));
 
-  // stack peek
-  printf("stack top (after the pop_stack()): %d\n", format_data(peek_stack(&new_stack), int));
+  // pop a value from the stack
+  clibds_stack_pop(&new_stack);
 
-  // check the size of the stack
-  printf("stack size: %zu\n", new_stack.size);
+  clibds_stack_foreach(&new_stack, it)
+  {
+    printf("%d ", *(int *) *it);
+  }
+  putchar('\n');
 
   // delete the stack
-  delete_stack(&new_stack);
+  clibds_stack_delete(&new_stack);
 
   return 0;
 }

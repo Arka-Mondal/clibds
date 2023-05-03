@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2022, Arka Mondal. All rights reserved.
+  Copyright (c) 2023, Arka Mondal. All rights reserved.
   Use of this source code is governed by a BSD-style license that
   can be found in the LICENSE file.
 */
@@ -8,10 +8,37 @@
 #include <string.h>
 #include "linkedlist.h"
 
-bool initialize_bysize_listd(listd_t * const restrict ptr, size_t size_given)
+bool clibds_list_init_conf(list_conf_t * const restrict conf_ptr,
+                           void * (* given_conf_mem_alloc)(size_t),
+                           void (* given_conf_mem_free)(void *))
 {
-  if (ptr == NULL)
+  if (conf_ptr == NULL)
     return false;
+
+  conf_ptr->conf_mem_alloc = (given_conf_mem_alloc != NULL) ? given_conf_mem_alloc : malloc;
+  conf_ptr->conf_mem_free = (given_conf_mem_free != NULL) ? given_conf_mem_free : free;
+
+  return true;
+}
+
+bool clibds_list_init_bysize(list_t * const restrict ptr, size_t size_given,
+                             list_conf_t * const conf_ptr)
+{
+  if ((ptr == NULL) || ((conf_ptr != NULL)
+     && ((conf_ptr->conf_mem_alloc == NULL)
+     || (conf_ptr->conf_mem_free == NULL))))
+    return false;
+
+  if (conf_ptr == NULL)
+  {
+    ptr->mem_alloc = malloc;
+    ptr->mem_free = free;
+  }
+  else
+  {
+    ptr->mem_alloc = conf_ptr->conf_mem_alloc;
+    ptr->mem_free = conf_ptr->conf_mem_free;
+  }
 
   ptr->head = NULL;
   ptr->tail = NULL;
@@ -21,15 +48,15 @@ bool initialize_bysize_listd(listd_t * const restrict ptr, size_t size_given)
   return true;
 }
 
-bool pushback_listd(listd_t * const restrict ptr, void * data_given)
+bool clibds_list_pushback(list_t * const restrict ptr, void * const data_given)
 {
   void * dataptr;
-  dnode_t * current;
+  node_t * current;
 
   if (ptr == NULL)
     return false;
 
-  current = (dnode_t *) malloc((ptr->memsize) + sizeof(dnode_t));
+  current = (node_t *) ptr->mem_alloc((ptr->memsize) + sizeof(node_t));
   if (current == NULL)
     return false;
   else
@@ -41,7 +68,7 @@ bool pushback_listd(listd_t * const restrict ptr, void * data_given)
     current->data = dataptr;
     current->previous = ptr->tail;
     current->next = NULL;
-    ptr->size += 1;
+    ptr->size++;
 
     if (ptr->head == NULL)
     {
@@ -58,15 +85,15 @@ bool pushback_listd(listd_t * const restrict ptr, void * data_given)
   }
 }
 
-bool pushfront_listd(listd_t * const restrict ptr, void * data_given)
+bool clibds_list_pushfront(list_t * const restrict ptr, void * const data_given)
 {
   void * dataptr;
-  dnode_t * current;
+  node_t * current;
 
   if (ptr == NULL)
     return false;
 
-  current = (dnode_t *) malloc((ptr->memsize) + sizeof(dnode_t));
+  current = (node_t *) ptr->mem_alloc((ptr->memsize) + sizeof(node_t));
   if (current == NULL)
     return false;
   else
@@ -82,15 +109,16 @@ bool pushfront_listd(listd_t * const restrict ptr, void * data_given)
     current->previous = NULL;
     current->next = ptr->head;
     ptr->head = current;
-    ptr->size += 1;
+    ptr->size++;
 
     return true;
   }
 }
 
-bool pushatindex_listd(listd_t * const restrict ptr, size_t index, void * data_given)
+bool clibds_list_pushatindex(list_t * const restrict ptr, size_t index,
+                             void * const data_given)
 {
-  dnode_t * current, * temp;
+  node_t * current, * temp;
   void * dataptr;
   size_t k;
 
@@ -101,7 +129,7 @@ bool pushatindex_listd(listd_t * const restrict ptr, size_t index, void * data_g
 
   if ((index >= 1) && (index < ptr->size))
   {
-    current = (dnode_t *) malloc(ptr->memsize + sizeof(dnode_t));
+    current = (node_t *) ptr->mem_alloc(ptr->memsize + sizeof(node_t));
     if (current == NULL)
       return false;
 
@@ -121,19 +149,19 @@ bool pushatindex_listd(listd_t * const restrict ptr, size_t index, void * data_g
     temp->next->previous = current;
     temp->next = current;
 
-    ptr->size += 1;
+    ptr->size++;
 
     return true;
   }
   else if ((index == 0) && (index < ptr->size))
-    return pushfront_listd(ptr, data_given);
+    return clibds_list_pushfront(ptr, data_given);
   else
     return false;
 }
 
-bool popfront_listd(listd_t * const restrict ptr)
+bool clibds_list_popfront(list_t * const restrict ptr)
 {
-  dnode_t * temp;
+  node_t * temp;
 
   if (ptr == NULL)
     return false;
@@ -149,8 +177,8 @@ bool popfront_listd(listd_t * const restrict ptr)
     if (ptr->head != NULL)
       ptr->head->previous = NULL;
 
-    free(temp);
-    ptr->size -= 1;
+    ptr->mem_free(temp);
+    ptr->size--;
 
     return true;
   }
@@ -158,9 +186,9 @@ bool popfront_listd(listd_t * const restrict ptr)
     return false;
 }
 
-bool popback_listd(listd_t * const restrict ptr)
+bool clibds_list_popback(list_t * const restrict ptr)
 {
-  dnode_t * temp;
+  node_t * temp;
 
   if (ptr == NULL)
     return false;
@@ -176,8 +204,8 @@ bool popback_listd(listd_t * const restrict ptr)
     if (ptr->tail != NULL)
       ptr->tail->next = NULL;
 
-    free(temp);
-    ptr->size -= 1;
+    ptr->mem_free(temp);
+    ptr->size--;
 
     return true;
   }
@@ -185,9 +213,9 @@ bool popback_listd(listd_t * const restrict ptr)
     return false;
 }
 
-bool popatindex_listd(listd_t * const restrict ptr, size_t index)
+bool clibds_list_popatindex(list_t * const restrict ptr, size_t index)
 {
-  dnode_t * temp, * delete;
+  node_t * temp, * delete;
   size_t k;
 
   if (ptr == NULL)
@@ -213,20 +241,20 @@ bool popatindex_listd(listd_t * const restrict ptr, size_t index)
       delete->next->previous = temp;
     }
 
-    free(delete);
-    ptr->size -= 1;
+    ptr->mem_free(delete);
+    ptr->size--;
 
     return true;
   }
   else if ((index == 0) && (index < ptr->size))
-    return popfront_listd(ptr);
+    return clibds_list_popfront(ptr);
   else
     return false;
 }
 
-size_t clear_listd(listd_t * const restrict ptr)
+size_t clibds_list_clear(list_t * const restrict ptr)
 {
-  dnode_t * temp;
+  node_t * temp;
   size_t count;
 
   if (ptr == NULL)
@@ -239,7 +267,7 @@ size_t clear_listd(listd_t * const restrict ptr)
     temp = ptr->head;
     ptr->head = ptr->head->next;
 
-    free(temp);
+    ptr->mem_free(temp);
     count++;
   }
 
@@ -249,23 +277,23 @@ size_t clear_listd(listd_t * const restrict ptr)
   return count;
 }
 
-size_t delete_listd(listd_t * const restrict ptr)
+size_t clibds_list_delete(list_t * const restrict ptr)
 {
   size_t count;
 
   if (ptr == NULL)
     return 0;
 
-  count = clear_listd(ptr);
+  count = clibds_list_clear(ptr);
 
   ptr->memsize = 0;
 
   return count;
 }
 
-void * getnode_atindex_listd(listd_t * const restrict ptr, size_t index)
+void * clibds_list_getatindex(list_t * const restrict ptr, size_t index)
 {
-  dnode_t * temp;
+  node_t * temp;
   size_t k;
 
   if (ptr == NULL)
@@ -284,9 +312,9 @@ void * getnode_atindex_listd(listd_t * const restrict ptr, size_t index)
   }
 }
 
-size_t reverselist_listd(listd_t * const restrict ptr)
+size_t clibds_list_reverse(list_t * const restrict ptr)
 {
-  dnode_t * prevnode, * nextnode;
+  node_t * prevnode, * nextnode;
   size_t count;
 
   if (ptr == NULL)
@@ -319,9 +347,10 @@ size_t reverselist_listd(listd_t * const restrict ptr)
   return count;
 }
 
-bool is_palindrome_listd(listd_t * const restrict ptr, int (* compare)(const void *, const void *))
+bool clibds_list_ispalindrome(list_t * const restrict ptr,
+                         int (* compare)(const void *, const void *))
 {
-  dnode_t * begin, * end;
+  node_t * begin, * end;
   bool is_palindrome;
 
   if (ptr == NULL)

@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2022, Arka Mondal. All rights reserved.
+  Copyright (c) 2023, Arka Mondal. All rights reserved.
   Use of this source code is governed by a BSD-style license that
   can be found in the LICENSE file.
 */
@@ -8,9 +8,9 @@
 #include <string.h>
 #include "linkedlist.h"
 
-static node_t * reverse_list_bynode(node_t * current)
+static fnode_t * clibds_flist_reverse_bynode(fnode_t * current)
 {
-  node_t * prevnode, * nextnode;
+  fnode_t * prevnode, * nextnode;
 
   prevnode = NULL;
 
@@ -25,10 +25,24 @@ static node_t * reverse_list_bynode(node_t * current)
   return prevnode;
 }
 
-bool initialize_bysize_list(list_t * const restrict ptr, size_t size_given)
+bool clibds_flist_init_bysize(forward_list_t * const restrict ptr, size_t size_given,
+                              list_conf_t * const conf_ptr)
 {
-  if (ptr == NULL)
+  if ((ptr == NULL) || ((conf_ptr != NULL)
+     && ((conf_ptr->conf_mem_alloc == NULL)
+     || (conf_ptr->conf_mem_free == NULL))))
     return false;
+
+  if (conf_ptr == NULL)
+  {
+    ptr->mem_alloc = malloc;
+    ptr->mem_free = free;
+  }
+  else
+  {
+    ptr->mem_alloc = conf_ptr->conf_mem_alloc;
+    ptr->mem_free = conf_ptr->conf_mem_free;
+  }
 
   ptr->head = NULL;
   ptr->tail = NULL;
@@ -38,15 +52,15 @@ bool initialize_bysize_list(list_t * const restrict ptr, size_t size_given)
   return true;
 }
 
-bool pushback_list(list_t * const restrict ptr, void * data_given)
+bool clibds_flist_pushback(forward_list_t * const restrict ptr, void * const data_given)
 {
-  node_t * current;
+  fnode_t * current;
   void * dataptr;
 
   if (ptr == NULL)
     return false;
 
-  current = (node_t *) malloc((ptr->memsize) + sizeof(node_t));
+  current = (fnode_t *) ptr->mem_alloc((ptr->memsize) + sizeof(fnode_t));
   if (current == NULL)
     return false;
   else
@@ -74,15 +88,15 @@ bool pushback_list(list_t * const restrict ptr, void * data_given)
   }
 }
 
-bool pushfront_list(list_t * const restrict ptr, void * data_given)
+bool clibds_flist_pushfront(forward_list_t * const restrict ptr, void * const data_given)
 {
-  node_t * current, * temp;
+  fnode_t * current, * temp;
   void * dataptr;
 
   if (ptr == NULL)
     return false;
 
-  current = (node_t *) malloc((ptr->memsize) + sizeof(node_t));
+  current = (fnode_t *) ptr->mem_alloc((ptr->memsize) + sizeof(fnode_t));
   if (current == NULL)
     return false;
   else
@@ -104,9 +118,10 @@ bool pushfront_list(list_t * const restrict ptr, void * data_given)
   }
 }
 
-bool pushatindex_list(list_t * const restrict ptr, size_t index, void * data_given)
+bool clibds_flist_pushatindex(forward_list_t * const restrict ptr,
+                              size_t index, void * const data_given)
 {
-  node_t * temp, * current;
+  fnode_t * temp, * current;
   void * dataptr;
   size_t k;
 
@@ -117,7 +132,7 @@ bool pushatindex_list(list_t * const restrict ptr, size_t index, void * data_giv
 
   if ((index >= 1) && (index < ptr->size))
   {
-    current = (node_t *) malloc((ptr->memsize) + sizeof(node_t));
+    current = (fnode_t *) ptr->mem_alloc((ptr->memsize) + sizeof(fnode_t));
     if (current == NULL)
       return false;
 
@@ -138,52 +153,14 @@ bool pushatindex_list(list_t * const restrict ptr, size_t index, void * data_giv
     return true;
   }
   else if ((index == 0) && (index < ptr->size))
-    return pushfront_list(ptr, data_given);
+    return clibds_flist_pushfront(ptr, data_given);
   else
     return false;
 }
 
-size_t clear_list(list_t * const restrict ptr)
+bool clibds_flist_popfront(forward_list_t * const restrict ptr)
 {
-  node_t * temp;
-  size_t count;
-
-  if (ptr == NULL)
-    return 0;
-
-  count = 0;
-
-  while (ptr->head != NULL)
-  {
-    temp = ptr->head;
-    ptr->head = ptr->head->next;
-    free(temp);
-    count++;
-  }
-
-  ptr->tail = NULL;
-  ptr->size = 0;
-
-  return count;
-}
-
-size_t delete_list(list_t * const restrict ptr)
-{
-  size_t count;
-
-  if (ptr == NULL)
-    return 0;
-
-  count = clear_list(ptr);
-
-  ptr->memsize = 0;
-
-  return count;
-}
-
-bool popfront_list(list_t * const restrict ptr)
-{
-  node_t * temp;
+  fnode_t * temp;
 
   if (ptr == NULL)
     return false;
@@ -197,7 +174,7 @@ bool popfront_list(list_t * const restrict ptr)
     if (ptr->size == 1)
       ptr->tail = NULL;
 
-    free(temp);
+    ptr->mem_free(temp);
     ptr->size -= 1;
 
     return true;
@@ -206,9 +183,9 @@ bool popfront_list(list_t * const restrict ptr)
     return false;
 }
 
-bool popback_list(list_t * const restrict ptr)
+bool clibds_flist_popback(forward_list_t * const restrict ptr)
 {
-  node_t * temp;
+  fnode_t * temp;
 
   if (ptr == NULL)
     return false;
@@ -221,7 +198,7 @@ bool popback_list(list_t * const restrict ptr)
     {
       ptr->head = NULL;
       ptr->tail = NULL;
-      free(temp);
+      ptr->mem_free(temp);
     }
     else
     {
@@ -230,7 +207,7 @@ bool popback_list(list_t * const restrict ptr)
         temp = temp->next;
       }
 
-      free(temp->next);
+      ptr->mem_free(temp->next);
       temp->next = NULL;
       ptr->tail = temp;
     }
@@ -243,9 +220,9 @@ bool popback_list(list_t * const restrict ptr)
     return false;
 }
 
-bool popatindex_list(list_t * const restrict ptr, size_t index)
+bool clibds_flist_popatindex(forward_list_t * const restrict ptr, size_t index)
 {
-  node_t * temp, * delete;
+  fnode_t * temp, * delete;
   size_t k;
 
   if (ptr == NULL)
@@ -271,19 +248,57 @@ bool popatindex_list(list_t * const restrict ptr, size_t index)
     }
 
     ptr->size -= 1;
-    free(delete);
+    ptr->mem_free(delete);
 
     return true;
   }
   else if ((index == 0) && (index < ptr->size))
-    return popfront_list(ptr);
+    return clibds_flist_popfront(ptr);
   else
     return false;
 }
 
-void * getnodedata_atindex_list(list_t * const restrict ptr, size_t index)
+size_t clibds_flist_clear(forward_list_t * const restrict ptr)
 {
-  node_t * temp;
+  fnode_t * temp;
+  size_t count;
+
+  if (ptr == NULL)
+    return 0;
+
+  count = 0;
+
+  while (ptr->head != NULL)
+  {
+    temp = ptr->head;
+    ptr->head = ptr->head->next;
+    ptr->mem_free(temp);
+    count++;
+  }
+
+  ptr->tail = NULL;
+  ptr->size = 0;
+
+  return count;
+}
+
+size_t clibds_flist_delete(forward_list_t * const restrict ptr)
+{
+  size_t count;
+
+  if (ptr == NULL)
+    return 0;
+
+  count = clibds_flist_clear(ptr);
+
+  ptr->memsize = 0;
+
+  return count;
+}
+
+void * clibds_flist_getatindex(forward_list_t * const restrict ptr, size_t index)
+{
+  fnode_t * temp;
   size_t k;
 
   if (ptr == NULL)
@@ -302,9 +317,9 @@ void * getnodedata_atindex_list(list_t * const restrict ptr, size_t index)
   }
 }
 
-size_t reverse_list(list_t * const restrict ptr)
+size_t clibds_flist_reverse(forward_list_t * const restrict ptr)
 {
-  node_t * prevnode, * nextnode;
+  fnode_t * prevnode, * nextnode;
   size_t count;
 
   if (ptr == NULL)
@@ -332,9 +347,9 @@ size_t reverse_list(list_t * const restrict ptr)
   return count;
 }
 
-bool is_palindrome_list(list_t * const restrict ptr, int (* compare)(const void *, const void *))
+bool clibds_flist_ispalindrome(forward_list_t * const restrict ptr, int (* compare)(const void *, const void *))
 {
-  node_t * fastptr, * slowptr;
+  fnode_t * fastptr, * slowptr;
   bool is_palindrome;
 
   if (ptr == NULL)
@@ -361,7 +376,7 @@ bool is_palindrome_list(list_t * const restrict ptr, int (* compare)(const void 
 
   // resuing fastptr for the last node of the list and slowptr for the head of the node
 
-  fastptr = reverse_list_bynode(slowptr);
+  fastptr = clibds_flist_reverse_bynode(slowptr);
   slowptr = ptr->head;
 
   while ((fastptr != NULL) && (fastptr != slowptr))     // (fastptr != slowptr) can be neglected
@@ -375,7 +390,7 @@ bool is_palindrome_list(list_t * const restrict ptr, int (* compare)(const void 
     slowptr = slowptr->next;
   }
 
-  reverse_list_bynode(ptr->tail);
+  clibds_flist_reverse_bynode(ptr->tail);
 
   return is_palindrome;
 }

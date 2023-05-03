@@ -1,79 +1,96 @@
 /*
-  Copyright (c) 2022, Arka Mondal. All rights reserved.
+  Copyright (c) 2023, Arka Mondal. All rights reserved.
   Use of this source code is governed by a BSD-style license that
   can be found in the LICENSE file.
 */
 
-#ifndef LINKEDLIST_H
-  #define LINKEDLIST_H
+#ifndef CLIBDS_LINKEDLIST_H
+  #define CLIBDS_LINKEDLIST_H
 
   #include <stdbool.h>
   #include <stddef.h>
-  #define initialize_list(S, T) initialize_bysize_list(S, sizeof(T))
-  #define is_empty_list(S) (((S) != NULL) ? (((S)->size == 0) ? true : false) : true)
-  #define for_each_in_list(Q, I) for (node_t * I = ((Q) != NULL) ? (Q)->head : NULL; I != NULL; I = I->next)
+  #define clibds_flist_init(L, T, C) clibds_flist_init_bysize(L, sizeof(T), C)
+  #define clibds_flist_size(L) (((L) != NULL) ? ((L)->size) : 0)
+  #define clibds_flist_isempty(L) (((L) != NULL) ? (((L)->size == 0) ? true : false) : true)
+  #define clibds_flist_foreach(L, I) for (fnode_t * I = ((L) != NULL) ? (L)->head : NULL; I != NULL; I = I->next)
 
-  #define initialize_listd(S, T) initialize_bysize_listd(S, sizeof(T))
-  #define is_empty_listd(S) (((S) != NULL) ? (((S)->size == 0) ? true : false) : true)
-  #define for_each_in_listd(Q, I) for (dnode_t * I = ((Q) != NULL) ? (Q)->head : NULL; I != NULL; I = I->next)
+  #define clibds_list_init(L, T, C) clibds_list_init_bysize(L, sizeof(T), C)
+  #define clibds_list_size(L) (((L) != NULL) ? ((L)->size) : 0)
+  #define clibds_list_isempty(L) (((L) != NULL) ? (((L)->size == 0) ? true : false) : true)
+  #define clibds_list_foreach(L, I) for (node_t * I = ((L) != NULL) ? (L)->head : NULL; I != NULL; I = I->next)
 
   #define format_data(I, T) (*(T *) (I))
 
-  struct node {
-    void * data;
-    struct node * next;
+  struct clibds_list_conf {
+    void * (* conf_mem_alloc)(size_t);
+    void (* conf_mem_free)(void *);
   };
 
-  struct node_d {
+  struct clibds_forward_node {
     void * data;
-    struct node_d * next;
-    struct node_d * previous;
+    struct clibds_forward_node * next;
   };
 
-  struct list {
-    struct node * head;
-    struct node * tail;
+  struct clibds_node {
+    void * data;
+    struct clibds_node * next;
+    struct clibds_node * previous;
+  };
+
+  struct clibds_forward_list {
+    struct clibds_forward_node * head;
+    struct clibds_forward_node * tail;
     size_t memsize;
     size_t size;
+
+    void * (* mem_alloc)(size_t);
+    void (* mem_free)(void *);
   };
 
-  struct list_d {
-    struct node_d * head;
-    struct node_d * tail;
+  struct clibds_list {
+    struct clibds_node * head;
+    struct clibds_node * tail;
     size_t memsize;
     size_t size;
+
+    void * (* mem_alloc)(size_t);
+    void (* mem_free)(void *);
   };
 
+  typedef struct clibds_list_conf list_conf_t;
 
-  typedef struct node node_t;
-  typedef struct list list_t;
-  typedef struct node_d dnode_t;
-  typedef struct list_d listd_t;
+  typedef struct clibds_forward_node fnode_t;
+  typedef struct clibds_node node_t;
+  typedef struct clibds_forward_list forward_list_t;
+  typedef struct clibds_list list_t;
 
-  bool initialize_bysize_list(list_t * const restrict, size_t);
-  bool pushback_list(list_t * const restrict, void *);
-  bool pushfront_list(list_t * const restrict, void *);
-  bool pushatindex_list(list_t * const restrict, size_t, void *);
-  bool popfront_list(list_t * const restrict);
-  bool popback_list(list_t * const restrict);
-  bool popatindex_list(list_t * const restrict, size_t);
-  size_t clear_list(list_t * const restrict);
-  size_t delete_list(list_t * const restrict);
-  void * getnode_atindex_list(list_t * const restrict, size_t);
-  size_t reverse_list(list_t * const restrict);
-  bool is_palindrome_list(list_t * const restrict, int (*)(const void *, const void *));
+  bool clibds_list_init_conf(list_conf_t * const restrict,
+                             void * (*)(size_t), void (*)(void *));
 
-  bool initialize_bysize_listd(listd_t * const restrict, size_t);
-  bool pushback_listd(listd_t * const restrict, void *);
-  bool pushfront_listd(listd_t * const restrict, void *);
-  bool pushatindex_listd(listd_t * const restrict, size_t, void *);
-  bool popfront_listd(listd_t * const restrict);
-  bool popback_listd(listd_t * const restrict);
-  bool popatindex_listd(listd_t * const restrict, size_t);
-  size_t clear_listd(listd_t * const restrict);
-  size_t delete_listd(listd_t * const restrict);
-  void * getnode_atindex_listd(listd_t * const restrict, size_t);
-  size_t reverselist_listd(listd_t * const restrict);
-  bool is_palindrome_listd(listd_t * const restrict, int (*)(const void *, const void *));
+  bool clibds_flist_init_bysize(forward_list_t * const restrict, size_t, list_conf_t * const);
+  bool clibds_flist_pushback(forward_list_t * const restrict, void * const);
+  bool clibds_flist_pushfront(forward_list_t * const restrict, void * const);
+  bool clibds_flist_pushatindex(forward_list_t * const restrict, size_t, void * const);
+  bool clibds_flist_popfront(forward_list_t * const restrict);
+  bool clibds_flist_popback(forward_list_t * const restrict);
+  bool clibds_flist_popatindex(forward_list_t * const restrict, size_t);
+  size_t clibds_flist_clear(forward_list_t * const restrict);
+  size_t clibds_flist_delete(forward_list_t * const restrict);
+  void * clibds_flist_getatindex(forward_list_t * const restrict, size_t);
+  size_t clibds_flist_reverse(forward_list_t * const restrict);
+  bool clibds_flist_ispalindrome(forward_list_t * const restrict, int (*)(const void *, const void *));
+
+  bool clibds_list_init_bysize(list_t * const restrict, size_t, list_conf_t * const);
+  bool clibds_list_pushback(list_t * const restrict, void * const);
+  bool clibds_list_pushfront(list_t * const restrict, void * const);
+  bool clibds_list_pushatindex(list_t * const restrict, size_t, void * const);
+  bool clibds_list_popfront(list_t * const restrict);
+  bool clibds_list_popback(list_t * const restrict);
+  bool clibds_list_popatindex(list_t * const restrict, size_t);
+  size_t clibds_list_clear(list_t * const restrict);
+  size_t clibds_list_delete(list_t * const restrict);
+  void * clibds_list_getatindex(list_t * const restrict, size_t);
+  size_t clibds_list_reverse(list_t * const restrict);
+  bool clibds_list_ispalindrome(list_t * const restrict, int (*)(const void *, const void *));
 
 #endif

@@ -4,10 +4,10 @@
 */test*.c
 Linked_list/Linked_list_Doubly
 Linked_list/Linked_list_Singly
-Graph_Theory/graph_test.c
-Graph_Theory/linkedlist.h
-Graph_Theory/Makefile
-Graph_Theory/queue.h
-Graph_Theory/top_test
-Graph_Theory/pqueue.h
+Vector/linkedlist*
 Stack/vector.h
+Graph_Theory
+Sparse_Table
+Trie
+Union_Find
+Fenwick_Tree

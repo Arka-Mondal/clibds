@@ -21,12 +21,11 @@ int main(void)
   clibds_list_init(&new_list, int, NULL);
 
   // push each element one by one at the end of the list
-  for (i = 0; i < 6; i++)
-    clibds_list_pushback(&new_list, arr + i);
+  clibds_list_pushback_from_array(&new_list, arr, 6);
 
   // iterate over each element in the list starting from the beginning of the list
   clibds_list_foreach(&new_list, it)
-    printf("%d ", format_data(it->data, int));
+    printf("%d ", clibds_list_format_data(it, int));
   putchar('\n');
 
   // push an element at the beginning of the list
@@ -42,7 +41,7 @@ int main(void)
   clibds_list_popback(&new_list);
 
   clibds_list_foreach(&new_list, it)
-    printf("%d ", format_data(it->data, int));
+    printf("%d ", clibds_list_format_data(it, int));
   putchar('\n');
 
   // delete the list

@@ -85,6 +85,43 @@ bool clibds_list_pushback(list_t * const restrict ptr, void * const data_given)
   }
 }
 
+size_t clibds_list_pushback_from_array(list_t * const restrict list,
+                                       void * const arr, size_t nelem)
+{
+  uint8_t * ptr, * end_ptr;
+  size_t count;
+
+  if ((list == NULL) || (arr == NULL) || (nelem == 0))
+    return 0;
+
+  count = 0;
+  end_ptr = ((uint8_t *) arr) + (list->memsize * nelem);
+  for (ptr = arr; ptr < end_ptr; ptr += list->memsize, count++)
+    if (!clibds_list_pushback(list, ptr))
+      break;
+
+  return count;
+}
+
+size_t clibds_list_pushback_from_vector(list_t * const restrict list,
+                                        vector_t * const vect)
+{
+  size_t count;
+
+  if ((list == NULL) || (vect == NULL) || (list->memsize != vect->memsize))
+    return 0;
+
+  count = 0;
+
+  clibds_vec_foreach(vect, it)
+  {
+    if (!clibds_list_pushback(list, it))
+      break;
+  }
+
+  return count;
+}
+
 bool clibds_list_pushfront(list_t * const restrict ptr, void * const data_given)
 {
   void * dataptr;
@@ -113,6 +150,43 @@ bool clibds_list_pushfront(list_t * const restrict ptr, void * const data_given)
 
     return true;
   }
+}
+
+size_t clibds_list_pushfront_from_array(list_t * const restrict list,
+                                       void * const arr, size_t nelem)
+{
+  uint8_t * ptr, * end_ptr;
+  size_t count;
+
+  if ((list == NULL) || (arr == NULL) || (nelem == 0))
+    return 0;
+
+  count = 0;
+  end_ptr = ((uint8_t *) arr) + (list->memsize * nelem);
+  for (ptr = arr; ptr < end_ptr; ptr += list->memsize, count++)
+    if (!clibds_list_pushfront(list, ptr))
+      break;
+
+  return count;
+}
+
+size_t clibds_list_pushfront_from_vector(list_t * const restrict list,
+                                         vector_t * const vect)
+{
+  size_t count;
+
+  if ((list == NULL) || (vect == NULL) || (list->memsize != vect->memsize))
+    return 0;
+
+  count = 0;
+
+  clibds_vec_foreach(vect, it)
+  {
+    if (!clibds_list_pushfront(list, it))
+      break;
+  }
+
+  return count;
 }
 
 bool clibds_list_pushatindex(list_t * const restrict ptr, size_t index,

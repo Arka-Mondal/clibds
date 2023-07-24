@@ -12,7 +12,9 @@ int main(void)
   int arr[6] = {6, 7, 1, 2, 8, 3};
   vector_t new_vec;
 
-  clibds_vec_init(&new_vec, int, NULL);
+  // initialize vector with default configuration
+  // equivalent to: clibds_vec_init(&new_vec, int, NULL);
+  clibds_vec_init(&new_vec, int);
 
   /*for (int i = 0; i < 6; i++)
     clibds_vec_push(&new_vec, arr + i);*/

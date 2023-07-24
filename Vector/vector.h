@@ -14,7 +14,12 @@
   #define DEFAULT_INIT_CAP 32
   #define DEFAULT_EXP_FAC 2
   #define VEC_MAX_CAPACITY ((size_t) -2)
-  #define clibds_vec_init(V, T, C) clibds_vec_init_bysize(V, sizeof(T), C)
+  #define clibds_invoke(ARG_1, ARG_2, ARG_3, NAME, ...) NAME
+  #define clibds_vec_init(V, T, ...) \
+    clibds_invoke(V, T __VA_OPT__(,) __VA_ARGS__, clibds_vec_init_withconf, clibds_vec_init_default)\
+                  (V, T __VA_OPT__(,) __VA_ARGS__)
+  #define clibds_vec_init_withconf(V, T, C) clibds_vec_init_bysize(V, sizeof(T), C)
+  #define clibds_vec_init_default(V, T) clibds_vec_init_bysize(V, sizeof(T), NULL)
   #define clibds_vec_size(V) (((V) != NULL) ? ((V)->size) : 0)
   #define clibds_vec_isempty(V) (((V) != NULL) ? (((V)->size == 0) ? true : false) : true)
   #define clibds_vec_foreach(V, I) \
@@ -55,8 +60,9 @@
   typedef struct clibds_vector_conf vector_conf_t;
   typedef struct clibds_vector vector_t;
 
-  bool clibds_vec_init_conf(vector_conf_t * const, size_t, size_t,
+  bool clibds_vec_init_conf(vector_conf_t * const restrict, size_t, size_t,
                             void * (*)(size_t), void (*)(void *));
+  bool clibds_vec_destroy_conf(vector_conf_t * const restrict);
   bool clibds_vec_init_bysize(vector_t * const, size_t, vector_conf_t * const);
   bool clibds_vec_push(vector_t * const, void * const);
   size_t clibds_vec_push_from_array(vector_t * const, void * const, size_t);

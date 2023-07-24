@@ -59,7 +59,7 @@ static bool clibds_vec_resizebuffer(vector_t * const restrict vec_ptr)
  * functions.
 */
 
-bool clibds_vec_init_conf(vector_conf_t * const conf_ptr,
+bool clibds_vec_init_conf(vector_conf_t * const restrict conf_ptr,
                           size_t given_init_capacity, size_t given_exp_factor,
                           void * (* given_conf_mem_alloc)(size_t),
                           void (* given_conf_mem_free)(void *))
@@ -71,6 +71,19 @@ bool clibds_vec_init_conf(vector_conf_t * const conf_ptr,
   conf_ptr->init_exp_factor = (given_exp_factor > 1) ? given_exp_factor : DEFAULT_EXP_FAC;
   conf_ptr->conf_mem_alloc = (given_conf_mem_alloc != NULL) ? given_conf_mem_alloc : malloc;
   conf_ptr->conf_mem_free = (given_conf_mem_free != NULL) ? given_conf_mem_free : free;
+
+  return true;
+}
+
+bool clibds_vec_destroy_conf(vector_conf_t * const restrict conf_ptr)
+{
+  if (conf_ptr == NULL)
+    return false;
+
+  conf_ptr->init_capacity = 0;
+  conf_ptr->init_exp_factor = 0;
+  conf_ptr->conf_mem_alloc = NULL;
+  conf_ptr->conf_mem_free = NULL;
 
   return true;
 }

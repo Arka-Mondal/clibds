@@ -18,13 +18,16 @@ int main(void)
 
   clibds_rbt_initialize(&new_tree, int, comp_data);
 
-  for (i = 0; i < 9; i++)
+  /* for adding custom memory allocator
+   * ----------------------------------
+   * clibds_rbt_initialize(&new_tree, int, comp_data,
+   *                       .conf_mem_alloc = alloc_fn, .conf_mem_free = free_fn);
+  */
+
+  if (clibds_rbt_insert_from_array(&new_tree, data_arr, 9) == 0)
   {
-    if (clibds_rbt_insert(&new_tree, data_arr + i) == false)
-    {
-      fputs("Node can not be inserted.\n", stderr);
-      exit(EXIT_FAILURE);
-    }
+    fputs("Insertion failed.\n", stderr);
+    exit(EXIT_FAILURE);
   }
 
   count = clibds_rbt_getdata(&new_tree, order, POSTORDER);

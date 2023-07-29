@@ -4,6 +4,7 @@
   can be found in the LICENSE file.
 */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "rbtree.h"
@@ -221,9 +222,9 @@ static void clibds_rbt_reverseorder(void * arr, size_t datasize, void * temp,
 {
   while (left < right)
   {
-    memcpy(temp, (char *)arr + (left * datasize), datasize);    // temp = arr[left]
-    memcpy((char *)arr + (left * datasize), (char *)arr + (right * datasize), datasize); // arr[left] = arr[right]
-    memcpy((char *)arr + (right * datasize), temp, datasize);   // arr[right] = temp
+    memcpy(temp, ((uint8_t *) arr) + (left * datasize), datasize);    // temp = arr[left]
+    memcpy(((uint8_t *) arr) + (left * datasize), ((uint8_t *) arr) + (right * datasize), datasize); // arr[left] = arr[right]
+    memcpy(((uint8_t *) arr) + (right * datasize), temp, datasize);   // arr[right] = temp
     left++;
     right--;
   }
@@ -242,7 +243,7 @@ static size_t clibds_rbt_preorder(rbtree_t * const ptr, void * arr)
   {
     if (current->left == NULL)
     {
-      memcpy((char *)arr + (count * datasize), current->data, datasize);
+      memcpy(((uint8_t *) arr) + (count * datasize), current->data, datasize);
       count++;
       current = current->right;
     }
@@ -257,7 +258,7 @@ static size_t clibds_rbt_preorder(rbtree_t * const ptr, void * arr)
       if (pred->right == NULL)
       {
         pred->right = current;
-        memcpy((char *)arr + (count * datasize), current->data, datasize);
+        memcpy(((uint8_t *) arr) + (count * datasize), current->data, datasize);
         count++;
         current = current->left;
       }
@@ -290,7 +291,7 @@ static size_t clibds_rbt_inorder(rbtree_t * const ptr, void * arr)
   {
     if (current->left == NULL)
     {
-      memcpy((char *)arr + (count * datasize), current->data, datasize);
+      memcpy(((uint8_t *) arr) + (count * datasize), current->data, datasize);
       count++;
       current = current->right;
     }
@@ -315,7 +316,7 @@ static size_t clibds_rbt_inorder(rbtree_t * const ptr, void * arr)
          */
 
         pred->right = NULL;
-        memcpy((char *)arr + (count * datasize), current->data, datasize);
+        memcpy(((uint8_t *) arr) + (count * datasize), current->data, datasize);
         count++;
         current = current->right;
       }
@@ -334,7 +335,7 @@ static size_t clibds_rbt_postorder(rbtree_t * const ptr, void * arr)
   count = 0;
   datasize = ptr->memsize;
 
-  temp = (rbtnode_t *) malloc(datasize + sizeof(rbtnode_t));
+  temp = (rbtnode_t *) ptr->mem_alloc(datasize + sizeof(rbtnode_t));
   if (temp == NULL)
     return count;
 
@@ -366,13 +367,13 @@ static size_t clibds_rbt_postorder(rbtree_t * const ptr, void * arr)
 
         while ((pred->right != NULL) && (pred->right != current))
         {
-          memcpy((char *)arr + (count * datasize), pred->data, datasize);
+          memcpy(((uint8_t *) arr) + (count * datasize), pred->data, datasize);
           count++;
           pred = pred->right;
           node_count++;
         }
 
-        memcpy((char *)arr + (count * datasize), pred->data, datasize);
+        memcpy(((uint8_t *) arr) + (count * datasize), pred->data, datasize);
         count++;
 
         pred->right = NULL;
@@ -382,19 +383,28 @@ static size_t clibds_rbt_postorder(rbtree_t * const ptr, void * arr)
     }
   }
 
-  free(temp);
+  ptr->mem_free(temp);
 
   return count;
 }
 
 bool clibds_rbt_initialize_bysize(rbtree_t * const ptr, size_t size_given,
-                             int (* comparator_given)(void *, void *))
+                                  rbtree_conf_t * const conf_ptr)
 {
-  if ((ptr == NULL) || (size_given == 0) || (comparator_given == NULL))
+  if ((ptr == NULL) || (size_given == 0))
     return false;
 
+  if (conf_ptr->conf_comparator == NULL)
+    return false;
+
+  if (pthread_mutex_init(&ptr->rbt_mtx, NULL) != 0)
+    return false;
+
+  ptr->comparator = conf_ptr->conf_comparator;
+  ptr->mem_alloc = (conf_ptr->conf_mem_alloc != NULL) ? conf_ptr->conf_mem_alloc : malloc;
+  ptr->mem_free = (conf_ptr->conf_mem_free != NULL) ? conf_ptr->conf_mem_free : free;
+
   ptr->root = NULL;
-  ptr->comparator = comparator_given;
   ptr->memsize = size_given;
   ptr->size = 0;
 
@@ -410,9 +420,11 @@ bool clibds_rbt_insert(rbtree_t * const ptr, void * data_given)
     return false;
 
   parent_node = NULL;
+
+  pthread_mutex_lock(&ptr->rbt_mtx);
   temp = ptr->root;
 
-  current = (rbtnode_t *) malloc(ptr->memsize + sizeof(rbtnode_t));
+  current = (rbtnode_t *) ptr->mem_alloc(ptr->memsize + sizeof(rbtnode_t));
   if (current == NULL)
     return false;
 
@@ -433,7 +445,8 @@ bool clibds_rbt_insert(rbtree_t * const ptr, void * data_given)
       temp = temp->right;
     else
     {
-      free(current);
+      pthread_mutex_unlock(&ptr->rbt_mtx);
+      ptr->mem_free(current);
       return true;
     }
   }
@@ -454,8 +467,28 @@ bool clibds_rbt_insert(rbtree_t * const ptr, void * data_given)
   else
     current->node_color = BLACK;
 
-  ptr->size += 1;
+  ptr->size++;
+  pthread_mutex_unlock(&ptr->rbt_mtx);
+
   return true;
+}
+
+size_t clibds_rbt_insert_from_array(rbtree_t * const ptr, void * arr, size_t nelem)
+{
+  uint8_t * start, * end;
+  size_t count;
+
+  if ((ptr == NULL) || (arr == NULL) || (nelem == 0))
+    return 0;
+
+  count = 0;
+  end = ((uint8_t *) arr) + (ptr->memsize * nelem);
+
+  for (start = (uint8_t *) arr; start < end; start += ptr->memsize, count++)
+    if (!clibds_rbt_insert(ptr, start))
+      break;
+
+  return count;
 }
 
 bool clibds_rbt_remove(rbtree_t * const ptr, void * dataptr)
@@ -466,6 +499,7 @@ bool clibds_rbt_remove(rbtree_t * const ptr, void * dataptr)
   if ((ptr == NULL) || (dataptr == NULL))
     return false;
 
+  pthread_mutex_lock(&ptr->rbt_mtx);
   current = ptr->root;
 
   while (current != NULL)
@@ -479,7 +513,10 @@ bool clibds_rbt_remove(rbtree_t * const ptr, void * dataptr)
   }
 
   if (current == NULL)
+  {
+    pthread_mutex_unlock(&ptr->rbt_mtx);
     return false;
+  }
 
   temp = current;
   original_color = temp->node_color;
@@ -541,13 +578,14 @@ bool clibds_rbt_remove(rbtree_t * const ptr, void * dataptr)
     parent_node = current->parent;
   }
 
-  free(current);
+  ptr->mem_free(current);
 
   if (original_color == BLACK)
     clibds_rbt_remove_fix(ptr, child_node, parent_node);
 
-
   ptr->size--;
+  pthread_mutex_unlock(&ptr->rbt_mtx);
+
   return true;
 }
 
@@ -558,6 +596,9 @@ size_t clibds_rbt_delete(rbtree_t * const ptr)
 
   if (ptr == NULL)
     return 0;
+
+  // lock the mutex
+  pthread_mutex_lock(&ptr->rbt_mtx);
 
   current = ptr->root;
   count = 0;
@@ -578,7 +619,7 @@ size_t clibds_rbt_delete(rbtree_t * const ptr)
 
     pred = current;
     current = current->right;
-    free(pred);
+    ptr->mem_free(pred);
     count++;
   }
 
@@ -587,16 +628,25 @@ size_t clibds_rbt_delete(rbtree_t * const ptr)
   ptr->memsize = 0;
   ptr->size = 0;
 
+  // unlock the mutex
+  pthread_mutex_unlock(&ptr->rbt_mtx);
+  // destroy the mutex
+  pthread_mutex_destroy(&ptr->rbt_mtx);
+
   return count;
 }
 
 void * clibds_rbt_search(rbtree_t * const ptr, void * dataptr)
 {
+  void * data;
   rbtnode_t * current;
 
   if ((ptr == NULL) || (dataptr == NULL))
     return NULL;
 
+  data = NULL;
+
+  pthread_mutex_lock(&ptr->rbt_mtx);
   current = ptr->root;
 
   while (current != NULL)
@@ -606,16 +656,26 @@ void * clibds_rbt_search(rbtree_t * const ptr, void * dataptr)
     else if (ptr->comparator(dataptr, current->data) == 1)
       current = current->right;
     else
-      return current->data;
+    {
+      data = current->data;
+      break;
+    }
   }
 
-  return NULL;
+  pthread_mutex_unlock(&ptr->rbt_mtx);
+
+  return data;
 }
 
 bool clibds_rbt_viewdata(rbtree_t * const ptr, void (* print_data)(void *), int select)
 {
+  bool status;
+
   if (print_data == NULL)
     return false;
+
+  status = true;
+  pthread_mutex_lock(&ptr->rbt_mtx);
 
   if (select == PREORDER)
     preorder_rcs_rbt(ptr->root, print_data);
@@ -624,9 +684,11 @@ bool clibds_rbt_viewdata(rbtree_t * const ptr, void (* print_data)(void *), int 
   else if (select == POSTORDER)
     postorder_rcs_rbt(ptr->root, print_data);
   else
-    return false;
+    status = false;
 
-  return true;
+  pthread_mutex_unlock(&ptr->rbt_mtx);
+
+  return status;
 }
 
 size_t clibds_rbt_getdata(rbtree_t * const ptr, void * arr, int select)
@@ -635,6 +697,8 @@ size_t clibds_rbt_getdata(rbtree_t * const ptr, void * arr, int select)
 
   if ((ptr == NULL) || (arr == NULL))
     return 0;
+
+  pthread_mutex_lock(&ptr->rbt_mtx);
 
   if (select == PREORDER)
     count = clibds_rbt_preorder(ptr, arr);
@@ -645,35 +709,58 @@ size_t clibds_rbt_getdata(rbtree_t * const ptr, void * arr, int select)
   else
     count = 0;
 
+  pthread_mutex_unlock(&ptr->rbt_mtx);
+
   return count;
 }
 
 void * clibds_rbt_minimum(rbtree_t * const ptr)
 {
+  void * data;
   rbtnode_t * current;
 
   if (ptr == NULL)
     return NULL;
 
+  data = NULL;
+
+  pthread_mutex_lock(&ptr->rbt_mtx);
   current = ptr->root;
 
-  while (current->left != NULL)
-    current = current->left;
+  if (current != NULL)
+  {
+    while (current->left != NULL)
+      current = current->left;
 
-  return current->data;
+  data = current->data;
+  }
+
+  pthread_mutex_unlock(&ptr->rbt_mtx);
+
+  return data;
 }
 
 void * clibds_rbt_maximum(rbtree_t * const ptr)
 {
+  void * data;
   rbtnode_t * current;
 
   if (ptr == NULL)
     return NULL;
 
+  data = NULL;
+
+  pthread_mutex_lock(&ptr->rbt_mtx);
   current = ptr->root;
 
-  while (current->right != NULL)
-    current = current->right;
+  if (current != NULL)
+  {
+    while (current->right != NULL)
+      current = current->right;
 
-  return current->data;
+    data = current->data;
+  }
+  pthread_mutex_unlock(&ptr->rbt_mtx);
+
+  return data;
 }

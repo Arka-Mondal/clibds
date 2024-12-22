@@ -9,7 +9,7 @@
 
 int main(void)
 {
-  int arr[6] = {12, 6, 84, 63, 55, 34}, i, value1, value2;
+  int arr[6] = {12, 6, 84, 63, 55, 34}, value1, value2;
 
   // declare a list type variable
   list_t new_list;
@@ -25,7 +25,7 @@ int main(void)
 
   // iterate over each element in the list starting from the beginning of the list
   clibds_list_foreach(&new_list, it)
-    printf("%d ", clibds_list_format_data(it, int));
+    printf("%d ", clibds_list_fmt_data(it, int));
   putchar('\n');
 
   // push an element at the beginning of the list
@@ -41,7 +41,7 @@ int main(void)
   clibds_list_popback(&new_list);
 
   clibds_list_foreach(&new_list, it)
-    printf("%d ", clibds_list_format_data(it, int));
+    printf("%d ", clibds_list_fmt_data(it, int));
   putchar('\n');
 
   // delete the list

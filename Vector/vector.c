@@ -8,6 +8,16 @@
 #include <string.h>
 #include "vector.h"
 
+static size_t next_power_of_two(size_t num)
+{
+  num--;
+  for (size_t i = 1; i <= (sizeof(size_t) << 2); i = i << 1)
+    num |= num >> i;
+  num++;
+
+  return num;
+}
+
 /*
  * Exapnds the buffer capacity. It returns false if the
  * capacity already reached the maximum level or if the
@@ -22,7 +32,7 @@ static bool clibds_vec_resizebuffer(vector_t * const restrict vec_ptr)
   size_t new_capacity, temp_capacity;
   uint8_t * new_buffer;
 
-  if (vec_ptr->capacity == VEC_MAX_CAPACITY)
+  if (vec_ptr->capacity == CLIBDS_VEC_MAX_CAPACITY)
     return false;
 
   new_capacity = vec_ptr->capacity * vec_ptr->exp_factor;
@@ -34,7 +44,7 @@ static bool clibds_vec_resizebuffer(vector_t * const restrict vec_ptr)
   */
 
   if (new_capacity <= vec_ptr->capacity)
-    temp_capacity = VEC_MAX_CAPACITY;
+    temp_capacity = CLIBDS_VEC_MAX_CAPACITY;
   else
     temp_capacity = new_capacity;
 
@@ -59,16 +69,15 @@ static bool clibds_vec_resizebuffer(vector_t * const restrict vec_ptr)
  * functions.
 */
 
-bool clibds_vec_init_conf(vector_conf_t * const restrict conf_ptr,
-                          size_t given_init_capacity, size_t given_exp_factor,
+bool clibds_vec_init_conf(vector_conf_t * const restrict conf_ptr, size_t given_init_capacity,
                           void * (* given_conf_mem_alloc)(size_t),
                           void (* given_conf_mem_free)(void *))
 {
   if (conf_ptr == NULL)
     return false;
 
-  conf_ptr->init_capacity = (given_init_capacity != 0) ? given_init_capacity : DEFAULT_INIT_CAP;
-  conf_ptr->init_exp_factor = (given_exp_factor > 1) ? given_exp_factor : DEFAULT_EXP_FAC;
+  conf_ptr->init_capacity = (given_init_capacity != 0) ? given_init_capacity : CLIBDS_VEC_DEFAULT_INIT_CAP;
+  conf_ptr->init_exp_factor = CLIBDS_VEC_DEFAULT_EXP_FAC;
   conf_ptr->conf_mem_alloc = (given_conf_mem_alloc != NULL) ? given_conf_mem_alloc : malloc;
   conf_ptr->conf_mem_free = (given_conf_mem_free != NULL) ? given_conf_mem_free : free;
 
@@ -104,8 +113,8 @@ bool clibds_vec_init_bysize(vector_t * const vec_ptr, size_t element_size,
 
   if (conf_ptr == NULL)
   {
-    vec_ptr->capacity = DEFAULT_INIT_CAP;
-    vec_ptr->exp_factor = DEFAULT_EXP_FAC;
+    vec_ptr->capacity = CLIBDS_VEC_DEFAULT_INIT_CAP;
+    vec_ptr->exp_factor = CLIBDS_VEC_DEFAULT_EXP_FAC;
     vec_ptr->mem_alloc = malloc;
     vec_ptr->mem_free = free;
   }
@@ -180,56 +189,6 @@ size_t clibds_vec_push_from_array(vector_t * const vect, void * const arr, size_
   for (ptr = arr; ptr < end_ptr; ptr += vect->memsize, count++)
     if (!clibds_vec_push(vect, ptr))
       break;
-
-  return count;
-}
-
-/*
- * Inserts elements to the end the vector from a list.
- *
- * It returns the number of inserted elements.
-*/
-
-size_t clibds_vec_push_from_list(vector_t * const vect, list_t * const list)
-{
-  size_t count;
-
-  if ((vect == NULL) || (list == NULL) || (vect->memsize != list->memsize))
-    return 0;
-
-  count = 0;
-
-  clibds_list_foreach(list, it)
-  {
-    if (!clibds_vec_push(vect, it->data))
-      break;
-    count++;
-  }
-
-  return count;
-}
-
-/*
- * Inserts elements to the end the vector from a forward list.
- *
- * It returns the number of inserted elements.
-*/
-
-size_t clibds_vec_push_from_flist(vector_t * const vect, flist_t * const flist)
-{
-  size_t count;
-
-  if ((vect == NULL) || (flist == NULL) || (vect->memsize != flist->memsize))
-    return 0;
-
-  count = 0;
-
-  clibds_flist_foreach(flist, it)
-  {
-    if (!clibds_vec_push(vect, it->data))
-      break;
-    count++;
-  }
 
   return count;
 }
@@ -438,36 +397,38 @@ bool clibds_vec_clone(vector_t * const new_vec, vector_t * const old_vec)
   return true;
 }
 
-/*
- * Creates a slice of a vector[index_start:index_end]
+/* (0) 1 (2) 3 (4) 5 (6) 7 (8) 9
+ * Creates a slice of a vector[index_start:index_end:step]
  *
  * Returns false if the new_vec is NULL or the old_vec is NULL
  * or the memory allocation is failed.
 */
 
 bool clibds_vec_slice(vector_t * const new_vec, vector_t * const old_vec,
-                      size_t index_start, size_t index_end)
+                      size_t index_start, size_t index_end, size_t step)
 {
   uint8_t * temp;
   void * addr;
-  size_t capacity_needed, i, capacity;
+  size_t capacity_needed, i, k, capacity;
 
   if ((new_vec == NULL) || (old_vec == NULL) || (index_end < index_start)
-      || (index_start >= old_vec->size) || (index_end >= old_vec->size))
+      || (index_start >= old_vec->size) /*|| (index_end > old_vec->size)*/)
     return false;
 
-  capacity_needed = (index_end - index_start + 1);
+  index_end = (index_end > old_vec->size) ? old_vec->size : index_end;
+  capacity_needed = (index_end - index_start + (step - 1)) / step;
   capacity = capacity_needed;
 
   // round up to next power of 2
-  capacity--;
-  for (i = 1; i <= sizeof(size_t) * 4; i = i << 1)
-    capacity |= capacity >> i;
-  capacity++;
+  capacity = next_power_of_two(capacity);
+  // capacity--;
+  // for (i = 1; i <= sizeof(size_t) * 4; i = i << 1)
+  //   capacity |= capacity >> i;
+  // capacity++;
 
   // check for overflow
   if (capacity < capacity_needed)
-    capacity = VEC_MAX_CAPACITY;
+    capacity = CLIBDS_VEC_MAX_CAPACITY;
 
 
   new_vec->size = capacity_needed;
@@ -483,7 +444,11 @@ bool clibds_vec_slice(vector_t * const new_vec, vector_t * const old_vec,
 
   new_vec->buffer = temp;
   addr = old_vec->buffer + index_start * old_vec->memsize;
-  memcpy(new_vec->buffer, addr, capacity_needed * old_vec->memsize);
+  if (step == 1)
+    memcpy(new_vec->buffer, addr, capacity_needed * old_vec->memsize);
+  else
+    for (k = 0, i = index_start; i < index_end; i += step, k++)
+      memcpy(new_vec->buffer + k * old_vec->memsize, old_vec->buffer + i * old_vec->memsize, old_vec->memsize);
 
   return true;
 }

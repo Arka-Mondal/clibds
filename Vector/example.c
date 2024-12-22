@@ -21,13 +21,13 @@ int main(void)
   clibds_vec_push_from_array(&new_vec, arr, 6);
 
   clibds_vec_foreach(&new_vec, it)
-    printf("%d ", clibds_vec_format_data(it, int));
+    printf("%d ", clibds_vec_fmt_data(it, int));
   putchar('\n');
 
   clibds_vec_insert(&new_vec, 0, &(int){5});
 
   clibds_vec_foreach(&new_vec, it)
-    printf("%d ", clibds_vec_format_data(it, int));
+    printf("%d ", clibds_vec_fmt_data(it, int));
   putchar('\n');
 
   printf("Size: %zu\n", clibds_vec_size(&new_vec));
@@ -35,7 +35,7 @@ int main(void)
   printf("%s\n", (clibds_vec_remove(&new_vec, 2)) ? "true" : "false");
 
   clibds_vec_foreach(&new_vec, it)
-    printf("%d ", clibds_vec_format_data(it, int));
+    printf("%d ", clibds_vec_fmt_data(it, int));
   putchar('\n');
 
   printf("Size: %zu\n", clibds_vec_size(&new_vec));

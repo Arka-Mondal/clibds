@@ -103,25 +103,6 @@ size_t clibds_list_pushback_from_array(list_t * const restrict list,
   return count;
 }
 
-size_t clibds_list_pushback_from_vector(list_t * const restrict list,
-                                        vector_t * const vect)
-{
-  size_t count;
-
-  if ((list == NULL) || (vect == NULL) || (list->memsize != vect->memsize))
-    return 0;
-
-  count = 0;
-
-  clibds_vec_foreach(vect, it)
-  {
-    if (!clibds_list_pushback(list, it))
-      break;
-  }
-
-  return count;
-}
-
 bool clibds_list_pushfront(list_t * const restrict ptr, void * const data_given)
 {
   void * dataptr;
@@ -145,6 +126,7 @@ bool clibds_list_pushfront(list_t * const restrict ptr, void * const data_given)
     current->data = dataptr;
     current->previous = NULL;
     current->next = ptr->head;
+    ptr->head->previous = current;
     ptr->head = current;
     ptr->size++;
 
@@ -166,25 +148,6 @@ size_t clibds_list_pushfront_from_array(list_t * const restrict list,
   for (ptr = arr; ptr < end_ptr; ptr += list->memsize, count++)
     if (!clibds_list_pushfront(list, ptr))
       break;
-
-  return count;
-}
-
-size_t clibds_list_pushfront_from_vector(list_t * const restrict list,
-                                         vector_t * const vect)
-{
-  size_t count;
-
-  if ((list == NULL) || (vect == NULL) || (list->memsize != vect->memsize))
-    return 0;
-
-  count = 0;
-
-  clibds_vec_foreach(vect, it)
-  {
-    if (!clibds_list_pushfront(list, it))
-      break;
-  }
 
   return count;
 }
@@ -420,7 +383,7 @@ size_t clibds_list_reverse(list_t * const restrict ptr)
 
   return count;
 }
-
+/*
 bool clibds_list_ispalindrome(list_t * const restrict ptr,
                          int (* compare)(const void *, const void *))
 {
@@ -448,3 +411,4 @@ bool clibds_list_ispalindrome(list_t * const restrict ptr,
 
   return is_palindrome;
 }
+*/

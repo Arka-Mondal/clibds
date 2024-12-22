@@ -8,6 +8,7 @@
 #include <string.h>
 #include "linkedlist.h"
 
+/*
 static fnode_t * clibds_flist_reverse_bynode(fnode_t * current)
 {
   fnode_t * prevnode, * nextnode;
@@ -23,6 +24,20 @@ static fnode_t * clibds_flist_reverse_bynode(fnode_t * current)
   }
 
   return prevnode;
+}
+*/
+
+bool clibds_flist_init_conf(flist_conf_t * const restrict conf_ptr,
+                           void * (* given_conf_mem_alloc)(size_t),
+                           void (* given_conf_mem_free)(void *))
+{
+  if (conf_ptr == NULL)
+    return false;
+
+  conf_ptr->conf_mem_alloc = (given_conf_mem_alloc != NULL) ? given_conf_mem_alloc : malloc;
+  conf_ptr->conf_mem_free = (given_conf_mem_free != NULL) ? given_conf_mem_free : free;
+
+  return true;
 }
 
 bool clibds_flist_init_bysize(flist_t * const restrict ptr, size_t size_given,
@@ -106,29 +121,9 @@ size_t clibds_flist_pushback_from_array(flist_t * const restrict flist,
   return count;
 }
 
-size_t clibds_flist_pushback_from_vector(flist_t * const restrict flist,
-                                         vector_t * const vect)
-{
-  size_t count;
-
-  if ((flist == NULL) || (vect == NULL)
-      || (flist->memsize != vect->memsize))
-    return 0;
-
-  count = 0;
-
-  clibds_vec_foreach(vect, it)
-  {
-    if (!clibds_flist_pushback(flist, it))
-      break;
-  }
-
-  return count;
-}
-
 bool clibds_flist_pushfront(flist_t * const restrict ptr, void * const data_given)
 {
-  fnode_t * current, * temp;
+  fnode_t * current;
   void * dataptr;
 
   if (ptr == NULL)
@@ -144,10 +139,11 @@ bool clibds_flist_pushfront(flist_t * const restrict ptr, void * const data_give
     memcpy(dataptr, data_given, ptr->memsize);
 
     current->data = dataptr;
-    temp = ptr->head;
+    // temp = ptr->head;
+    current->next = ptr->head;
     ptr->head = current;
-    current->next = temp;
-    ptr->size += 1;
+    // current->next = temp;
+    ptr->size++;
 
     if (ptr->tail == NULL)
       ptr->tail = ptr->head;
@@ -170,26 +166,6 @@ size_t clibds_flist_pushfront_from_array(flist_t * const restrict flist,
   for (ptr = arr; ptr < end_ptr; ptr += flist->memsize, count++)
     if (!clibds_flist_pushfront(flist, ptr))
       break;
-
-  return count;
-}
-
-size_t clibds_flist_pushfront_from_vector(flist_t * const restrict flist,
-                                          vector_t * const vect)
-{
-  size_t count;
-
-  if ((flist == NULL) || (vect == NULL)
-      || (flist->memsize != vect->memsize))
-    return 0;
-
-  count = 0;
-
-  clibds_vec_foreach(vect, it)
-  {
-    if (!clibds_flist_pushfront(flist, it))
-      break;
-  }
 
   return count;
 }
@@ -422,7 +398,7 @@ size_t clibds_flist_reverse(flist_t * const restrict ptr)
 
   return count;
 }
-
+/*
 bool clibds_flist_ispalindrome(flist_t * const restrict ptr, int (* compare)(const void *, const void *))
 {
   fnode_t * fastptr, * slowptr;
@@ -470,3 +446,4 @@ bool clibds_flist_ispalindrome(flist_t * const restrict ptr, int (* compare)(con
 
   return is_palindrome;
 }
+*/

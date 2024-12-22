@@ -22,7 +22,7 @@ int main(void)
   clibds_stack_push_from_array(&new_stack, arr, 6);
 
   clibds_stack_foreach(&new_stack, it)
-    printf("%d ", clibds_stack_format_data(it, int));
+    printf("%d ", clibds_stack_fmt_data(it, int));
   putchar('\n');
 
   printf("Stack size: %zu\n", clibds_stack_size(&new_stack));
@@ -31,7 +31,7 @@ int main(void)
   clibds_stack_pop(&new_stack);
 
   clibds_stack_foreach(&new_stack, it)
-    printf("%d ", clibds_stack_format_data(it, int));
+    printf("%d ", clibds_stack_fmt_data(it, int));
   putchar('\n');
 
   // delete the stack
